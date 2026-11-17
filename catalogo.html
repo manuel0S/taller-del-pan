@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo - Taller del Pan</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="nav-container">
+            <div class="logo-area">
+                <h1>Taller del Pan</h1>
+                <p>Cómete un pan</p>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="catalogo.html" class="active">Catálogo <span id="cart-count" class="cart-badge">0</span></a></li>
+                    <li><a href="contacto.html">Contacto</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <h2 class="section-title" style="text-align: center;">Nuestro Catálogo Artesanal</h2>
+        
+        <!-- Filtros avanzados de productos -->
+        <div class="filter-container">
+            <button class="filter-btn active" onclick="filtrarProductos('todos', this)">Todos</button>
+            <button class="filter-btn" onclick="filtrarProductos('rustico', this)">Panes Rústicos</button>
+            <button class="filter-btn" onclick="filtrarProductos('dulce', this)">Pan Dulce</button>
+            <button class="filter-btn" onclick="filtrarProductos('especialidad', this)">Especialidades</button>
+        </div>
+
+        <div class="card-grid" id="grid-productos">
+            <!-- Producto 1 -->
+            <div class="card" data-categoria="rustico">
+                <img src="https://images.unsplash.com/photo-1549931319-a545dcf3bc73?auto=format&fit=crop&w=500&q=80" alt="Baguette">
+                <div class="card-content">
+                    <h3>Baguette Rústica</h3>
+                    <p>Pan crujiente por fuera, suave y alveolado por dentro. Elaborado con masa madre.</p>
+                    <div class="price">$35.00 MXN</div>
+                    <button class="btn" onclick="agregarAlCarrito('Baguette Rústica', 35)">Agregar al Carrito</button>
+                </div>
+            </div>
+
+            <!-- Producto 2 -->
+            <div class="card" data-categoria="rustico">
+                <img src="https://images.unsplash.com/photo-1589367920969-ab8e050bbb04?auto=format&fit=crop&w=500&q=80" alt="Pan de Masa Madre">
+                <div class="card-content">
+                    <h3>Hogaza de Masa Madre</h3>
+                    <p>Pan integral de fermentación lenta de 24 horas con corteza firme y gran sabor.</p>
+                    <div class="price">$70.00 MXN</div>
+                    <button class="btn" onclick="agregarAlCarrito('Hogaza de Masa Madre', 70)">Agregar al Carrito</button>
+                </div>
+            </div>
+
+            <!-- Producto 3 -->
+            <div class="card" data-categoria="especialidad">
+                <img src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=500&q=80" alt="Croissant">
+                <div class="card-content">
+                    <h3>Croissant de Mantequilla</h3>
+                    <p>Hojaldre clásico francés elaborado con mantequilla pura importada.</p>
+                    <div class="price">$28.00 MXN</div>
+                    <button class="btn" onclick="agregarAlCarrito('Croissant de Mantequilla', 28)">Agregar al Carrito</button>
+                </div>
+            </div>
+
+            <!-- Producto 4 -->
+            <div class="card" data-categoria="dulce">
+                <img src="https://images.unsplash.com/photo-1608198093002-ad4e005484ec?auto=format&fit=crop&w=500&q=80" alt="Concha Tradicional">
+                <div class="card-content">
+                    <h3>Concha Tradicional</h3>
+                    <p>Pan dulce mexicano con crujiente cobertura de costra de azúcar sabor vainilla.</p>
+                    <div class="price">$20.00 MXN</div>
+                    <button class="btn" onclick="agregarAlCarrito('Concha Tradicional', 20)">Agregar al Carrito</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-box" style="margin-top: 3rem;">
+            <h3 style="margin-bottom: 1rem;">Tu Carrito de Panes Seleccionados</h3>
+            <ul id="lista-carrito" style="margin: 1rem 0; padding-left: 1.5rem; line-height: 2;">
+                <li>El carrito está vacío.</li>
+            </ul>
+            <p style="font-size: 1.2rem; margin-top: 1rem;"><strong>Total: </strong><span id="total-carrito">$0.00</span> MXN</p>
+            <br>
+            <button class="btn" id="btn-pagar" style="display:none;" onclick="irCheckout()">Proceder al Pedido y Pago</button>
+        </div>
+    </main>
+
+    <div id="toast-container"></div>
+
+    <footer>
+        <p>&copy; 2026 Taller del Pan. Todos los derechos reservados. | Cómete un pan</p>
+    </footer>
+
+    <script>
+        let carrito = JSON.parse(localStorage.getItem('carritoPanaderia')) || [];
+
+        function mostrarToast(mensaje) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `🍞 ${mensaje}`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 3000);
+        }
+
+        function actualizarCarritoUI() {
+            const lista = document.getElementById('lista-carrito');
+            const totalSpan = document.getElementById('total-carrito');
+            const btnPagar = document.getElementById('btn-pagar');
+            const badge = document.getElementById('cart-count');
+            
+            badge.innerText = carrito.length;
+            lista.innerHTML = '';
+            
+            if (carrito.length === 0) {
+                lista.innerHTML = '<li>El carrito está vacío.</li>';
+                totalSpan.innerText = '$0.00';
+                btnPagar.style.display = 'none';
+                return;
+            }
+
+            let total = 0;
+            carrito.forEach((item, index) => {
+                total += item.precio;
+                const li = document.createElement('li');
+                li.innerHTML = `<strong>${item.nombre}</strong> - $${item.precio}.00 MXN <button style="color:#ef4444; background:none; border:none; cursor:pointer; margin-left:15px; font-weight:600;" onclick="eliminarItem(${index})">[Eliminar]</button>`;
+                lista.appendChild(li);
+            });
+            totalSpan.innerText = `$${total.toFixed(2)}`;
+            btnPagar.style.display = 'inline-block';
+        }
+
+        function agregarAlCarrito(nombre, precio) {
+            carrito.push({ nombre, precio });
+            localStorage.setItem('carritoPanaderia', JSON.stringify(carrito));
+            actualizarCarritoUI();
+            mostrarToast(`¡"${nombre}" agregado al carrito!`);
+        }
+
+        function eliminarItem(index) {
+            const eliminado = carrito[index].nombre;
+            carrito.splice(index, 1);
+            localStorage.setItem('carritoPanaderia', JSON.stringify(carrito));
+            actualizarCarritoUI();
+            mostrarToast(`Se eliminó ${eliminado}`);
+        }
+
+        function filtrarProductos(categoria, boton) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            boton.classList.add('active');
+
+            const tarjetas = document.querySelectorAll('.card');
+            tarjetas.forEach(card => {
+                if (categoria === 'todos' || card.getAttribute('data-categoria') === categoria) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function irCheckout() {
+            window.location.href = 'checkout.html';
+        }
+
+        actualizarCarritoUI();
+    </script>
+</body>
+</html>

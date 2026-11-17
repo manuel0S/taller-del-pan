@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finalizar Pedido - Taller del Pan</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="nav-container">
+            <div class="logo-area">
+                <h1>Taller del Pan</h1>
+                <p>Cómete un pan</p>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="catalogo.html">Catálogo</a></li>
+                    <li><a href="contacto.html">Contacto</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <h2 class="section-title">Finalizar tu Pedido</h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+            <div class="info-box">
+                <h3 style="margin-bottom: 1rem;">Resumen de tu Compra</h3>
+                <ul id="resumen-pedido" style="margin: 1rem 0; padding-left: 1.5rem; line-height: 2;"></ul>
+                <hr style="border:0; border-top:1px solid #e7e5e4; margin: 1rem 0;">
+                <p style="font-size: 1.25rem;"><strong>Total a Pagar: </strong><span id="total-pago">$0.00</span> MXN</p>
+            </div>
+
+            <div class="info-box">
+                <h3 style="margin-bottom: 1rem;">Datos de Envío y Pago</h3>
+                <form id="form-checkout" onsubmit="procesarPago(event)">
+                    <div class="form-group">
+                        <label for="nombre">Nombre Completo</label>
+                        <input type="text" id="nombre" required placeholder="Ej. Carlos Mendoza">
+                    </div>
+                    <div class="form-group">
+                        <label for="telefono">Teléfono de Contacto</label>
+                        <input type="tel" id="telefono" required placeholder="55 1234 5678">
+                    </div>
+                    <div class="form-group">
+                        <label for="direccion">Dirección de Entrega</label>
+                        <textarea id="direccion" rows="3" required placeholder="Calle, Número exterior/interior, Colonia, C.P."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="tarjeta">Número de Tarjeta (Simulación Segura)</label>
+                        <input type="text" id="tarjeta" maxlength="19" required placeholder="4532 •••• •••• 8923">
+                    </div>
+                    <button type="submit" class="btn" style="width: 100%; padding: 1rem; font-size: 1.05rem;">Confirmar y Pagar Pedido</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast-container"></div>
+
+    <footer>
+        <p>&copy; 2026 Taller del Pan. Todos los derechos reservados. | Cómete un pan</p>
+    </footer>
+
+    <!-- Configuración de Firebase y Lógica del Carrito / Checkout -->
+    <script type="module">
+        // Importación completa de los módulos necesarios de Firebase v10
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFM_UeV2wJ38nvi_dCyPRcJ7khYS_Yb8o",
+            authDomain: "taller-del-pan.firebaseapp.com",
+            projectId: "taller-del-pan",
+            storageBucket: "taller-del-pan.firebasestorage.app",
+            messagingSenderId: "234459894908",
+            appId: "1:234459894908:web:1b5a6fcc5f3e5bce5465f9",
+            measurementId: "G-E2P9WLBD6R"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let carrito = JSON.parse(localStorage.getItem('carritoPanaderia')) || [];
+
+        function cargarResumen() {
+            const resumen = document.getElementById('resumen-pedido');
+            const totalPago = document.getElementById('total-pago');
+            
+            if (carrito.length === 0) {
+                resumen.innerHTML = '<li>No hay productos en el pedido. <a href="catalogo.html" style="color:#8b4513;">Volver al catálogo</a></li>';
+                return;
+            }
+
+            let total = 0;
+            resumen.innerHTML = '';
+            carrito.forEach(item => {
+                total += item.precio;
+                const li = document.createElement('li');
+                li.innerText = `${item.nombre} - $${item.precio}.00 MXN`;
+                resumen.appendChild(li);
+            });
+            totalPago.innerText = `$${total.toFixed(2)}`;
+        }
+
+        // Función principal vinculada al formulario
+        async function procesarPago(e) {
+            e.preventDefault();
+
+            if (carrito.length === 0) {
+                alert("Tu carrito está vacío.");
+                return;
+            }
+
+            const nombre = document.getElementById('nombre').value;
+            const telefono = document.getElementById('telefono').value;
+            const direccion = document.getElementById('direccion').value;
+            let total = carrito.reduce((acc, item) => acc + item.precio, 0);
+
+            const btn = e.target.querySelector('button');
+            btn.innerText = "Registrando pedido...";
+            btn.disabled = true;
+
+            try {
+                // Guarda los datos en la colección "pedidos" de Firestore
+                const docRef = await addDoc(collection(db, "pedidos"), {
+                    cliente: nombre,
+                    telefono: telefono,
+                    direccion: direccion,
+                    productos: carrito,
+                    total: Number(total),
+                    fecha: new Date().toISOString(),
+                    estado: "Nuevo"
+                });
+
+                console.log("Pedido guardado con éxito. ID:", docRef.id);
+                alert(`¡Excelente noticia, ${nombre}! Tu pedido se ha registrado con éxito.`);
+                
+                // Limpiamos el carrito local
+                localStorage.removeItem('carritoPanaderia');
+
+                // Pausa de 1.5 segundos para asegurar que Firebase termine de escribir antes de redirigir
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+
+            } catch (error) {
+                console.error("Error al registrar el pedido:", error);
+                alert("Hubo un error al procesar tu pedido. Inténtalo de nuevo.");
+                btn.innerText = "Confirmar y Pagar Pedido";
+                btn.disabled = false;
+            }
+        }
+
+        // Exponer la función globalmente para que el formulario la reconozca
+        window.procesarPago = procesarPago;
+
+        // Cargar el resumen al abrir la página
+        cargarResumen();
+    </script>
+</body>
+</html>
