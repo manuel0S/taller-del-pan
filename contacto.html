@@ -36,20 +36,20 @@
 
             <div class="info-box">
                 <h3 style="margin-bottom: 1rem;">Envíanos un Mensaje</h3>
-                <form onsubmit="enviarMensaje(event)">
+                <form action="https://formspree.io/f/xljbbeye" method="POST">
                     <div class="form-group">
-                        <label for="nombre-c">Tu Nombre</label>
-                        <input type="text" id="nombre-c" required placeholder="Tu nombre completo">
+                        <label for="nombre">Nombre Completo</label>
+                        <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre">
                     </div>
                     <div class="form-group">
-                        <label for="email-c">Correo Electrónico</label>
-                        <input type="email" id="email-c" required placeholder="tu@correo.com">
+                        <label for="email">Correo Electrónico</label>
+                        <input type="email" id="email" name="email" required placeholder="tu@correo.com">
                     </div>
                     <div class="form-group">
-                        <label for="mensaje-c">Mensaje o Pedido Especial</label>
-                        <textarea id="mensaje-c" rows="4" required placeholder="¿Tienes alguna duda sobre alérgenos o requieres un pastel de boda?"></textarea>
+                        <label for="mensaje">Mensaje</label>
+                        <textarea id="mensaje" name="mensaje" rows="4" required placeholder="Escribe tu mensaje..."></textarea>
                     </div>
-                    <button type="submit" class="btn" style="width: 100%;">Enviar Mensaje</button>
+                        <button type="submit" class="btn">Enviar Mensaje</button>
                 </form>
             </div>
         </div>
